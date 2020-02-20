@@ -1,0 +1,12 @@
+#all labs build
+labs/**/riscv-pk/build/
+
+#all elf app
+!labs/**/app/*.c
+!labs/**/app/*.h
+!labs/**/app/*.sh
+
+#
+*.o
+*.out
+*.swp
