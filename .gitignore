@@ -10,3 +10,4 @@ labs/**/riscv-pk/build/
 *.o
 *.out
 *.swp
+tags.txt
