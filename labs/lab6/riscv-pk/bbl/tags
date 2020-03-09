@@ -1,0 +1,18 @@
+!_TAG_FILE_FORMAT	2	/extended format; --format=1 will not append ;" to lines/
+!_TAG_FILE_SORTED	1	/0=unsorted, 1=sorted, 2=foldcase/
+!_TAG_PROGRAM_AUTHOR	Darren Hiebert	/dhiebert@users.sourceforge.net/
+!_TAG_PROGRAM_NAME	Exuberant Ctags	//
+!_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
+!_TAG_PROGRAM_VERSION	5.9~svn20110310	//
+_BBL_H	bbl.h	4;"	d
+_payload_end	payload.S	/^_payload_end:$/;"	l
+_payload_start	payload.S	/^_payload_start:$/;"	l
+boot_loader	bbl.c	/^void boot_loader(uintptr_t dtb)$/;"	f
+boot_other_hart	bbl.c	/^void boot_other_hart(uintptr_t unused __attribute__((unused)))$/;"	f
+disabled_hart_mask	bbl.c	/^long disabled_hart_mask;$/;"	v
+dtb_output	bbl.c	/^static uintptr_t dtb_output()$/;"	f	file:
+entry_point	bbl.c	/^static const void* entry_point;$/;"	v	file:
+filter_dtb	bbl.c	/^static void filter_dtb(uintptr_t source)$/;"	f	file:
+logo	raw_logo.S	/^logo:$/;"	l
+print_logo	logo.c	/^void print_logo()$/;"	f
+protect_memory	bbl.c	/^static void protect_memory(void)$/;"	f	file:
