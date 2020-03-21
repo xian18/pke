@@ -13,14 +13,15 @@
 
 
 typedef struct {
-  uintptr_t addr;
-  size_t length;
-  file_t* file;
-  size_t offset;
-  unsigned refcnt;
-  int prot;
+  uintptr_t addr;  //起始地址
+  size_t length;   //长度
+  file_t* file;    //文件
+  size_t offset;   //偏移
+  unsigned refcnt; //被引用数
+  int prot;        //权限rwx
 } vmr_t;
 
+//所有vmr_t只存在一页里？
 #define MAX_VMR (RISCV_PGSIZE / sizeof(vmr_t))
 static spinlock_t vm_lock = SPINLOCK_INIT;
 static vmr_t* vmrs;
@@ -33,6 +34,7 @@ static size_t free_pages;
 
 int demand_paging = 1; // unless -p flag is given
 
+//alloc一页
 uintptr_t __page_alloc()
 {
   kassert(next_free_page != free_pages);
@@ -41,6 +43,7 @@ uintptr_t __page_alloc()
   return addr;
 }
 
+//alloc vmr
 static vmr_t* __vmr_alloc(uintptr_t addr, size_t length, file_t* file,
                           size_t offset, unsigned refcnt, int prot)
 {
@@ -55,6 +58,7 @@ static vmr_t* __vmr_alloc(uintptr_t addr, size_t length, file_t* file,
   }
   mb();
 
+  //从vmrs开始找一个没有引用的vmr
   for (vmr_t* v = vmrs; v < vmrs + MAX_VMR; v++) {
     if (v->refcnt == 0) {
       if (file)
@@ -71,6 +75,7 @@ static vmr_t* __vmr_alloc(uintptr_t addr, size_t length, file_t* file,
   return NULL;
 }
 
+//vmr->ref 减1
 static void __vmr_decref(vmr_t* v, unsigned dec)
 {
   if ((v->refcnt -= dec) == 0)
@@ -80,20 +85,42 @@ static void __vmr_decref(vmr_t* v, unsigned dec)
   }
 }
 
+/* PTE(页表项)与PDE（页目录项）的结构
+31                     20 19                10 9      8 7 6 5 4 3 2 1 0
++------------------------+--------------------+--------+---------------+
+|         PPN[1]         |       PPN[0]       |Reserved|D|A|G|U|X|W|R|V|
++-----------12-----------+---------10---------+----2---+-------8-------+
+*/
 static size_t pte_ppn(pte_t pte)
 {
   return pte >> PTE_PPN_SHIFT;
 }
 
+/*
+一个虚拟地址的结构如下
+31                 22 21                12 11                     0
++--------------------+--------------------+------------------------+
+|       VPN[1]       |       VPN[0]       |      page offset       |
++---------10---------+---------10---------+----------12------------+
+
+一个物理地址（34位）的结构如下
+33                     22 21                12 11                     0
++------------------------+--------------------+------------------------+
+|         PPN[1]         |       PPN[0]       |       page offset      |
++-----------12-----------+---------10---------+-----------12-----------+
+不过pk实际只用了低32位,和虚拟地址一样
+*/
 static uintptr_t ppn(uintptr_t addr)
 {
-  return addr >> RISCV_PGSHIFT;
+  return addr >> RISCV_PGSHIFT;//addr>>12
 }
 
+//level = 1, 得到vpn[1]，即页目录项在一级页表的序号
+//level = 0, 得到vpn[0]，即页表项在二级页表的序号
 static size_t pt_idx(uintptr_t addr, int level)
 {
-  size_t idx = addr >> (RISCV_PGLEVEL_BITS*level + RISCV_PGSHIFT);
-  return idx & ((1 << RISCV_PGLEVEL_BITS) - 1);
+  size_t idx = addr >> (RISCV_PGLEVEL_BITS*level + RISCV_PGSHIFT);//addr >>((10 or 0 )+12)
+  return idx & ((1 << RISCV_PGLEVEL_BITS) - 1);//将高22位置0
 }
 
 static pte_t* __walk_create(uintptr_t addr);
@@ -104,15 +131,20 @@ static pte_t* __attribute__((noinline)) __continue_walk_create(uintptr_t addr, p
   return __walk_create(addr);
 }
 
+//获得二级页表项
 static pte_t* __walk_internal(uintptr_t addr, int create)
 {
   pte_t* t = root_page_table;
+  // VA_BITS 39 ？这是个啥？
+  // i = (39 - 12) /10 -1 = 1
+  // 两级页表
   for (int i = (VA_BITS - RISCV_PGSHIFT) / RISCV_PGLEVEL_BITS - 1; i > 0; i--) {
     size_t idx = pt_idx(addr, i);
     if (unlikely(!(t[idx] & PTE_V)))
       return create ? __continue_walk_create(addr, &t[idx]) : 0;
     t = (pte_t*)(pte_ppn(t[idx]) << RISCV_PGSHIFT);
   }
+  //return 页表项
   return &t[pt_idx(addr, 0)];
 }
 
@@ -132,6 +164,7 @@ static int __va_avail(uintptr_t vaddr)
   return pte == 0 || *pte == 0;
 }
 
+//alloc npages vm
 static uintptr_t __vm_alloc(size_t npage)
 {
   uintptr_t start = current.brk, end = current.mmap_max - npage*RISCV_PGSIZE;
@@ -149,6 +182,19 @@ static uintptr_t __vm_alloc(size_t npage)
   return 0;
 }
 
+/*
+页表项的标志位部分
+page table entry (PTE) fields 
+PTE_V     0x001 // Valid
+PTE_R     0x002 // Read
+PTE_W     0x004 // Write
+PTE_X     0x008 // Execute
+PTE_U     0x010 // User
+PTE_G     0x020 // Global
+PTE_A     0x040 // Accessed
+PTE_D     0x080 // Dirty
+PTE_SOFT  0x300 // Reserved for Software
+*/
 static inline pte_t prot_to_type(int prot, int user)
 {
   pte_t pte = 0;
@@ -160,6 +206,7 @@ static inline pte_t prot_to_type(int prot, int user)
   return pte;
 }
 
+//用户地址是否越界（段错误警告）
 int __valid_user_range(uintptr_t vaddr, size_t len)
 {
   if (vaddr + len < vaddr)
@@ -167,6 +214,7 @@ int __valid_user_range(uintptr_t vaddr, size_t len)
   return vaddr + len <= current.mmap_max;
 }
 
+//缺页错误
 static int __handle_page_fault(uintptr_t vaddr, int prot)
 {
   uintptr_t vpn = vaddr >> RISCV_PGSHIFT;
@@ -179,8 +227,8 @@ static int __handle_page_fault(uintptr_t vaddr, int prot)
   else if (!(*pte & PTE_V))
   {
 
-  	//uintptr_t ppn = vpn + (first_free_paddr / RISCV_PGSIZE);
-	uintptr_t ppn =page2ppn(pmm_manager->alloc_pages(1));
+    //uintptr_t ppn = vpn + (first_free_paddr / RISCV_PGSIZE);
+  uintptr_t ppn =page2ppn(pmm_manager->alloc_pages(1));
 
     vmr_t* v = (vmr_t*)*pte;
     *pte = pte_create(ppn, prot_to_type(PROT_READ|PROT_WRITE, 0));
@@ -232,6 +280,7 @@ static void __do_munmap(uintptr_t addr, size_t len)
   flush_tlb(); // TODO: shootdown
 }
 
+//将elf映射到内核空间
 uintptr_t __do_mmap(uintptr_t addr, size_t length, int prot, int flags, file_t* f, off_t offset)
 {
   size_t npage = (length-1)/RISCV_PGSIZE+1;
@@ -297,6 +346,7 @@ uintptr_t do_mmap(uintptr_t addr, size_t length, int prot, int flags, int fd, of
   return addr;
 }
 
+//设置堆的大小
 uintptr_t __do_brk(size_t addr)
 {
   uintptr_t newbrk = addr;
@@ -373,6 +423,7 @@ uintptr_t do_mprotect(uintptr_t addr, size_t length, int prot)
   return res;
 }
 
+//建立vaddr与paddr的线性映射
 void __map_kernel_range(uintptr_t vaddr, uintptr_t paddr, size_t len, int prot)
 {
   uintptr_t n = ROUNDUP(len, RISCV_PGSIZE) / RISCV_PGSIZE;
@@ -400,32 +451,41 @@ void populate_mapping(const void* start, size_t size, int prot)
 uintptr_t pk_vm_init()
 {
   // HTIF address signedness and va2pa macro both cap memory size to 2 GiB
+
+  //mem_size即为spike分配的物理空间大小，最大为2G
   mem_size = MIN(mem_size, 1U << 31);
+
   size_t mem_pages = mem_size >> RISCV_PGSHIFT;
   free_pages = MAX(8, mem_pages >> (RISCV_PGLEVEL_BITS-1));
+  //free_pages = 2048 pages = 8M
+  
 
   extern char _end;
   first_free_page = ROUNDUP((uintptr_t)&_end, RISCV_PGSIZE);
   first_free_paddr = first_free_page + free_pages * RISCV_PGSIZE;
 
+  //分配物理页作为页表
   root_page_table = (void*)__page_alloc();
+  //建立vaddr与paddr的临时对等映射
   __map_kernel_range(DRAM_BASE, DRAM_BASE, first_free_paddr - DRAM_BASE, PROT_READ|PROT_WRITE|PROT_EXEC);
 
   current.mmap_max = current.brk_max =
     MIN(DRAM_BASE, mem_size - (first_free_paddr - DRAM_BASE));
 
+  //设置用户栈大小 8M
   size_t stack_size = MIN(mem_pages >> 5, 2048) * RISCV_PGSIZE;
   size_t stack_bottom = __do_mmap(current.mmap_max - stack_size, stack_size, PROT_READ|PROT_WRITE|PROT_EXEC, MAP_PRIVATE|MAP_ANONYMOUS|MAP_FIXED, 0, 0);
   kassert(stack_bottom != (uintptr_t)-1);
   current.stack_top = stack_bottom + stack_size;
 
   flush_tlb();
+
+  //即satp，开启分页
   write_csr(sptbr, ((uintptr_t)root_page_table >> RISCV_PGSHIFT) | SATP_MODE_CHOICE);
 
   kernel_stack_top = __page_alloc() + RISCV_PGSIZE;
  
   pmm_init();
-  //proc_init();
-  //cpu_idle();
+
   return kernel_stack_top;
 }
