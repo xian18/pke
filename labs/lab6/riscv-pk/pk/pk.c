@@ -149,34 +149,35 @@ static void run_loaded_program(size_t argc, char** argv, uintptr_t kstack_top)
 static void rest_of_boot_loader(uintptr_t kstack_top)
 { 	
   arg_buf args;
-  size_t argc = parse_args(&args);
+  size_t argc = parse_args(&args);	//获取参数
   if (!argc)
     panic("tell me what ELF to load!");
 
   // load program named by argv[0]
   long phdrs[128];
-  current.phdr = (uintptr_t)phdrs;
-  current.phdr_size = sizeof(phdrs);
-  load_elf(args.argv[0], &current);
-  memset(current.file_name,0,sizeof(current.file_name));
+  current.phdr = (uintptr_t)phdrs;	//初始化elf文件对应的program header
+  current.phdr_size = sizeof(phdrs); 
+  load_elf(args.argv[0], &current);	 //初始化current,映射elf文件的各个段
+  memset(current.file_name,0,sizeof(current.file_name));	//设置elf文件名
   memcpy(current.file_name,args.argv[0],sizeof(current.file_name));
 
-  proc_init();
+  proc_init();	//初始化idle进程
   printk("load_elf %s\n",current.file_name);
-  run_loaded_program(argc, args.argv, kstack_top);
+  run_loaded_program(argc, args.argv, kstack_top);	//fork第一个进程，设置其trapframe
   cpu_idle();
 }
 
+//boot引导
 void boot_loader(uintptr_t dtb)
 {
-  extern char trap_entry;
-  write_csr(stvec, &trap_entry);
-  write_csr(sscratch, 0);
-  write_csr(sie, 0);
+  extern char trap_entry;		//trap_entry为中断入口地址
+  write_csr(stvec, &trap_entry);	//设置stvec csr寄存器，其值为中断跳转地址
+  write_csr(sscratch, 0);	//设置sscratch为零，在中断返回时其其标志着内核返回
+  write_csr(sie, 0);		//设置sie csr寄存器为0，关闭中断
   set_csr(sstatus, SSTATUS_SUM | SSTATUS_FS);
 
-  file_init();
-  enter_supervisor_mode(rest_of_boot_loader, pk_vm_init(), 0);
+  file_init();	//初始化文件句柄 stdin, stdout, stderr
+  enter_supervisor_mode(rest_of_boot_loader, pk_vm_init(), 0);		//切换至管理员模式，加载剩余部分
 }
 
 void boot_other_hart(uintptr_t dtb)
