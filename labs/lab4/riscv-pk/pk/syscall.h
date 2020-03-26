@@ -3,7 +3,7 @@
 #ifndef _PK_SYSCALL_H
 #define _PK_SYSCALL_H
 
-
+#define SYS_fork 82
 #define SYS_pmmalloc 81
 #define SYS_exit 93
 #define SYS_exit_group 94

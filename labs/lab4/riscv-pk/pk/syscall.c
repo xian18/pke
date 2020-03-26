@@ -7,6 +7,8 @@
 #include "frontend.h"
 #include "mmap.h"
 #include "boot.h"
+#include "proc.h"
+#include "sched.h"
 #include <string.h>
 #include <errno.h>
 
@@ -19,6 +21,11 @@ void sys_pmmalloc(){
 } 
 void sys_exit(int code)
 {
+  printk("sys_exit pid=%d\n",currentproc->pid);
+  currentproc->need_resched=1;
+  if(currentproc->need_resched){
+     schedule();
+  }
   if (current.cycle0) {
     size_t dt = rdtime() - current.time0;
     size_t dc = rdcycle() - current.cycle0;
@@ -313,10 +320,17 @@ int sys_uname(void* buf)
   return 0;
 }
 
+
+int sys_fork() {
+  printk("in sys_fork!\n");
+  trapframe_t *tf = currentproc->tf;
+  uintptr_t stack = tf->gpr[2];
+  return do_fork(0, stack, tf);
+}
+
 pid_t sys_getpid()
 {
-  printk("pid ==?\n");
-  return 0;
+  return currentproc->pid;
 }
 
 int sys_getuid()
@@ -433,7 +447,8 @@ static int sys_stub_nosys()
 long do_syscall(long a0, long a1, long a2, long a3, long a4, long a5, unsigned long n)
 {
   const static void* syscall_table[] = {
-	[ SYS_pmmalloc ] = sys_pmmalloc, 
+    [SYS_fork] = sys_fork,
+	  [SYS_pmmalloc] = sys_pmmalloc, 
     [SYS_exit] = sys_exit,
     [SYS_exit_group] = sys_exit,
     [SYS_read] = sys_read,

@@ -1,5 +1,7 @@
 // See LICENSE for license details.
 #include "pmm.h"
+#include "proc.h"
+#include "sched.h"
 #include "pk.h"
 #include "mmap.h"
 #include "boot.h"
@@ -62,45 +64,45 @@ static void run_loaded_program(size_t argc, char** argv, uintptr_t kstack_top)
 {
   // copy phdrs to user stack
   size_t stack_top = current.stack_top - current.phdr_size;
-  memcpy((void*)stack_top, (void*)current.phdr, current.phdr_size);
-  current.phdr = stack_top;
+  // memcpy((void*)stack_top, (void*)current.phdr, current.phdr_size);
+  // current.phdr = stack_top;
 
-  // copy argv to user stack
-  for (size_t i = 0; i < argc; i++) {
-    size_t len = strlen((char*)(uintptr_t)argv[i])+1;
-    stack_top -= len;
-    memcpy((void*)stack_top, (void*)(uintptr_t)argv[i], len);
-    argv[i] = (void*)stack_top;
-  }
+  // // copy argv to user stack
+  // for (size_t i = 0; i < argc; i++) {
+  //   size_t len = strlen((char*)(uintptr_t)argv[i])+1;
+  //   stack_top -= len;
+  //   memcpy((void*)stack_top, (void*)(uintptr_t)argv[i], len);
+  //   argv[i] = (void*)stack_top;
+  // }
 
-  // copy envp to user stack
-  const char* envp[] = {
-    // environment goes here
-  };
-  size_t envc = sizeof(envp) / sizeof(envp[0]);
-  for (size_t i = 0; i < envc; i++) {
-    size_t len = strlen(envp[i]) + 1;
-    stack_top -= len;
-    memcpy((void*)stack_top, envp[i], len);
-    envp[i] = (void*)stack_top;
-  }
+  // // copy envp to user stack
+  // const char* envp[] = {
+  //   // environment goes here
+  // };
+  // size_t envc = sizeof(envp) / sizeof(envp[0]);
+  // for (size_t i = 0; i < envc; i++) {
+  //   size_t len = strlen(envp[i]) + 1;
+  //   stack_top -= len;
+  //   memcpy((void*)stack_top, envp[i], len);
+  //   envp[i] = (void*)stack_top;
+  // }
 
-  // align stack
-  stack_top &= -sizeof(void*);
+  // // align stack
+  // stack_top &= -sizeof(void*);
 
-  struct {
-    long key;
-    long value;
-  } aux[] = {
-    {AT_ENTRY, current.entry},
-    {AT_PHNUM, current.phnum},
-    {AT_PHENT, current.phent},
-    {AT_PHDR, current.phdr},
-    {AT_PAGESZ, RISCV_PGSIZE},
-    {AT_SECURE, 0},
-    {AT_RANDOM, stack_top},
-    {AT_NULL, 0}
-  };
+  // struct {
+  //   long key;
+  //   long value;
+  // } aux[] = {
+  //   {AT_ENTRY, current.entry},
+  //   {AT_PHNUM, current.phnum},
+  //   {AT_PHENT, current.phent},
+  //   {AT_PHDR, current.phdr},
+  //   {AT_PAGESZ, RISCV_PGSIZE},
+  //   {AT_SECURE, 0},
+  //   {AT_RANDOM, stack_top},
+  //   {AT_NULL, 0}
+  // };
 
   // place argc, argv, envp, auxp on stack
   #define PUSH_ARG(type, value) do { \
@@ -126,50 +128,56 @@ static void run_loaded_program(size_t argc, char** argv, uintptr_t kstack_top)
     } \
   } while (0)
 
-  STACK_INIT(uintptr_t);
+  // STACK_INIT(uintptr_t);
 
-  if (current.cycle0) { // start timer if so requested
-    current.time0 = rdtime();
-    current.cycle0 = rdcycle();
-    current.instret0 = rdinstret();
-  }
+  // if (current.cycle0) { // start timer if so requested
+  //   current.time0 = rdtime();
+  //   current.cycle0 = rdcycle();
+  //   current.instret0 = rdinstret();
+  // }
 
 
   trapframe_t tf;
-  init_tf(&tf, current.entry, stack_top);
+  init_tf(&tf, 0x100c4,0x7f7e4c00 );
+  //init_tf(&tf, current.entry, stack_top);
   __clear_cache(0, 0);
+  do_fork(0,stack_top,&tf);
   write_csr(sscratch, kstack_top);
-
-  start_user(&tf);
+  //start_user(&tf);
 }
 
 static void rest_of_boot_loader(uintptr_t kstack_top)
 { 	
   arg_buf args;
-  size_t argc = parse_args(&args);
+  size_t argc = parse_args(&args);	//获取参数
   if (!argc)
     panic("tell me what ELF to load!");
 
   // load program named by argv[0]
   long phdrs[128];
-  current.phdr = (uintptr_t)phdrs;
-  current.phdr_size = sizeof(phdrs);
-  load_elf(args.argv[0], &current);
+  current.phdr = (uintptr_t)phdrs;	//初始化elf文件对应的program header
+  current.phdr_size = sizeof(phdrs); 
+  load_elf(args.argv[0], &current);	 //初始化current,映射elf文件的各个段
+  memset(current.file_name,0,sizeof(current.file_name));	//设置elf文件名
+  memcpy(current.file_name,args.argv[0],sizeof(current.file_name));
 
-printk("load_elf\n");
-  run_loaded_program(argc, args.argv, kstack_top);
+  proc_init();	//初始化idle进程
+  printk("load_elf %s\n",current.file_name);
+  run_loaded_program(argc, args.argv, kstack_top);	//fork第一个进程，设置其trapframe
+  cpu_idle();
 }
 
+//boot引导
 void boot_loader(uintptr_t dtb)
 {
-  extern char trap_entry;
-  write_csr(stvec, &trap_entry);
-  write_csr(sscratch, 0);
-  write_csr(sie, 0);
+  extern char trap_entry;		//trap_entry为中断入口地址
+  write_csr(stvec, &trap_entry);	//设置stvec csr寄存器，其值为中断跳转地址
+  write_csr(sscratch, 0);	//设置sscratch为零，在中断返回时其其标志着内核返回
+  write_csr(sie, 0);		//设置sie csr寄存器为0，关闭中断
   set_csr(sstatus, SSTATUS_SUM | SSTATUS_FS);
 
-  file_init();
-  enter_supervisor_mode(rest_of_boot_loader, pk_vm_init(), 0);
+  file_init();	//初始化文件句柄 stdin, stdout, stderr
+  enter_supervisor_mode(rest_of_boot_loader, pk_vm_init(), 0);		//切换至管理员模式，加载剩余部分
 }
 
 void boot_other_hart(uintptr_t dtb)

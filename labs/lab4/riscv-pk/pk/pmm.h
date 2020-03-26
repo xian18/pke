@@ -12,6 +12,10 @@ struct Page {
 };
 
 
+/* fork flags used in do_fork*/
+#define CLONE_VM            0x00000100  // set if VM shared between processes
+#define CLONE_THREAD        0x00000200  // thread group
+
 // pmm_manager is a physical memory management class. A special pmm manager -
 // XXX_pmm_manager
 // only needs to implement the methods in pmm_manager class, then
@@ -64,4 +68,5 @@ static inline ppn_t page2ppn(struct Page *page) { return page - pages + nbase; }
 static inline uintptr_t page2pa(struct Page *page) {
     return page2ppn(page) << RISCV_PGSHIFT;
 }
+
 
