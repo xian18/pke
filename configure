@@ -4208,22 +4208,22 @@ fi
 
     # Add subproject to our running list
 
-    subprojects="$subprojects bbl"
+#     subprojects="$subprojects bbl"
 
-    # Process the subproject appropriately. If enabled add it to the
-    # $enabled_subprojects running shell variable, set a
-    # SUBPROJECT_ENABLED C define, and include the appropriate
-    # 'subproject.ac'.
+#     # Process the subproject appropriately. If enabled add it to the
+#     # $enabled_subprojects running shell variable, set a
+#     # SUBPROJECT_ENABLED C define, and include the appropriate
+#     # 'subproject.ac'.
 
 
-      { $as_echo "$as_me:${as_lineno-$LINENO}: configuring default subproject : bbl" >&5
-$as_echo "$as_me: configuring default subproject : bbl" >&6;}
-      ac_config_files="$ac_config_files bbl.mk:bbl/bbl.mk.in"
+#       { $as_echo "$as_me:${as_lineno-$LINENO}: configuring default subproject : bbl" >&5
+# $as_echo "$as_me: configuring default subproject : bbl" >&6;}
+#       ac_config_files="$ac_config_files bbl.mk:bbl/bbl.mk.in"
 
-      enable_bbl_sproj="yes"
-      subprojects_enabled="$subprojects_enabled bbl"
+#       enable_bbl_sproj="yes"
+#       subprojects_enabled="$subprojects_enabled bbl"
 
-$as_echo "#define BBL_ENABLED /**/" >>confdefs.h
+# $as_echo "#define BBL_ENABLED /**/" >>confdefs.h
 
       # See LICENSE for license details.
 
@@ -4244,23 +4244,23 @@ fi
 
 
 # Check whether --with-payload was given.
-if test "${with_payload+set}" = set; then :
-  withval=$with_payload;
-   BBL_PAYLOAD=$with_payload
+# if test "${with_payload+set}" = set; then :
+#   withval=$with_payload;
+#    BBL_PAYLOAD=$with_payload
 
 
-$as_echo "#define RELAXED_ALIGNMENT 0" >>confdefs.h
+# $as_echo "#define RELAXED_ALIGNMENT 0" >>confdefs.h
 
 
-else
+# else
 
-   BBL_PAYLOAD=dummy_payload
-
-
-$as_echo "#define RELAXED_ALIGNMENT 1" >>confdefs.h
+#    BBL_PAYLOAD=dummy_payload
 
 
-fi
+# $as_echo "#define RELAXED_ALIGNMENT 1" >>confdefs.h
+
+
+# fi
 
 
 
@@ -4314,22 +4314,22 @@ fi
 
     # Add subproject to our running list
 
-    subprojects="$subprojects softfloat"
+#     subprojects="$subprojects softfloat"
 
-    # Process the subproject appropriately. If enabled add it to the
-    # $enabled_subprojects running shell variable, set a
-    # SUBPROJECT_ENABLED C define, and include the appropriate
-    # 'subproject.ac'.
+#     # Process the subproject appropriately. If enabled add it to the
+#     # $enabled_subprojects running shell variable, set a
+#     # SUBPROJECT_ENABLED C define, and include the appropriate
+#     # 'subproject.ac'.
 
 
-      { $as_echo "$as_me:${as_lineno-$LINENO}: configuring default subproject : softfloat" >&5
-$as_echo "$as_me: configuring default subproject : softfloat" >&6;}
-      ac_config_files="$ac_config_files softfloat.mk:softfloat/softfloat.mk.in"
+#       { $as_echo "$as_me:${as_lineno-$LINENO}: configuring default subproject : softfloat" >&5
+# $as_echo "$as_me: configuring default subproject : softfloat" >&6;}
+#       ac_config_files="$ac_config_files softfloat.mk:softfloat/softfloat.mk.in"
 
-      enable_softfloat_sproj="yes"
-      subprojects_enabled="$subprojects_enabled softfloat"
+#       enable_softfloat_sproj="yes"
+#       subprojects_enabled="$subprojects_enabled softfloat"
 
-$as_echo "#define SOFTFLOAT_ENABLED /**/" >>confdefs.h
+# $as_echo "#define SOFTFLOAT_ENABLED /**/" >>confdefs.h
 
 
 
@@ -4359,22 +4359,22 @@ $as_echo "#define SOFTFLOAT_ENABLED /**/" >>confdefs.h
 
     # Add subproject to our running list
 
-    subprojects="$subprojects dummy_payload"
+#     subprojects="$subprojects dummy_payload"
 
-    # Process the subproject appropriately. If enabled add it to the
-    # $enabled_subprojects running shell variable, set a
-    # SUBPROJECT_ENABLED C define, and include the appropriate
-    # 'subproject.ac'.
+#     # Process the subproject appropriately. If enabled add it to the
+#     # $enabled_subprojects running shell variable, set a
+#     # SUBPROJECT_ENABLED C define, and include the appropriate
+#     # 'subproject.ac'.
 
 
-      { $as_echo "$as_me:${as_lineno-$LINENO}: configuring default subproject : dummy_payload" >&5
-$as_echo "$as_me: configuring default subproject : dummy_payload" >&6;}
-      ac_config_files="$ac_config_files dummy_payload.mk:dummy_payload/dummy_payload.mk.in"
+#       { $as_echo "$as_me:${as_lineno-$LINENO}: configuring default subproject : dummy_payload" >&5
+# $as_echo "$as_me: configuring default subproject : dummy_payload" >&6;}
+#       ac_config_files="$ac_config_files dummy_payload.mk:dummy_payload/dummy_payload.mk.in"
 
-      enable_dummy_payload_sproj="yes"
-      subprojects_enabled="$subprojects_enabled dummy_payload"
+#       enable_dummy_payload_sproj="yes"
+#       subprojects_enabled="$subprojects_enabled dummy_payload"
 
-$as_echo "#define DUMMY_PAYLOAD_ENABLED /**/" >>confdefs.h
+# $as_echo "#define DUMMY_PAYLOAD_ENABLED /**/" >>confdefs.h
 
 
 
@@ -4424,17 +4424,17 @@ $as_echo "#define MACHINE_ENABLED /**/" >>confdefs.h
       # See LICENSE for license details.
 
 # Check whether --enable-fp-emulation was given.
-if test "${enable_fp_emulation+set}" = set; then :
-  enableval=$enable_fp_emulation;
-fi
+# if test "${enable_fp_emulation+set}" = set; then :
+#   enableval=$enable_fp_emulation;
+# fi
 
-if test "x$enable_fp_emulation" != "xno"; then :
-
-
-$as_echo "#define PK_ENABLE_FP_EMULATION /**/" >>confdefs.h
+# if test "x$enable_fp_emulation" != "xno"; then :
 
 
-fi
+# $as_echo "#define PK_ENABLE_FP_EMULATION /**/" >>confdefs.h
+
+
+# fi
 
 
 
@@ -5202,9 +5202,9 @@ for ac_config_target in $ac_config_targets
 do
   case $ac_config_target in
     "pk.mk") CONFIG_FILES="$CONFIG_FILES pk.mk:pk/pk.mk.in" ;;
-    "bbl.mk") CONFIG_FILES="$CONFIG_FILES bbl.mk:bbl/bbl.mk.in" ;;
-    "softfloat.mk") CONFIG_FILES="$CONFIG_FILES softfloat.mk:softfloat/softfloat.mk.in" ;;
-    "dummy_payload.mk") CONFIG_FILES="$CONFIG_FILES dummy_payload.mk:dummy_payload/dummy_payload.mk.in" ;;
+    # "bbl.mk") CONFIG_FILES="$CONFIG_FILES bbl.mk:bbl/bbl.mk.in" ;;
+    # "softfloat.mk") CONFIG_FILES="$CONFIG_FILES softfloat.mk:softfloat/softfloat.mk.in" ;;
+    # "dummy_payload.mk") CONFIG_FILES="$CONFIG_FILES dummy_payload.mk:dummy_payload/dummy_payload.mk.in" ;;
     "machine.mk") CONFIG_FILES="$CONFIG_FILES machine.mk:machine/machine.mk.in" ;;
     "util.mk") CONFIG_FILES="$CONFIG_FILES util.mk:util/util.mk.in" ;;
     "config.h") CONFIG_HEADERS="$CONFIG_HEADERS config.h" ;;

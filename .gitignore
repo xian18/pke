@@ -1,13 +1,13 @@
 #all labs build
-labs/**/riscv-pk/build/
+build/
 
 #all elf app
-!labs/**/app/*.c
-!labs/**/app/*.h
-!labs/**/app/*.sh
+app/
+!app/*.c
+!app/*.h
 
 #
 *.o
 *.out
 *.swp
-tags.txt
+tags
