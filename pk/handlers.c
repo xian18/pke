@@ -25,15 +25,11 @@ static void handle_store_access_fault(trapframe_t *tf)
 
 static void handle_illegal_instruction(trapframe_t* tf)
 {
-  tf->insn = *(uint16_t*)tf->epc;
-  int len = insn_len(tf->insn);
-  if (len == 4)
-    tf->insn |= ((uint32_t)*(uint16_t*)(tf->epc + 2) << 16);
-  else
-    kassert(len == 2);
-
-  dump_tf(tf);
-  panic("An illegal instruction was executed!");
+//  your code here:
+//  读取tf->epc
+//  根据tf->epc得到tf->insn
+//  打印tf
+//  打印panic
 }
 
 static void handle_breakpoint(trapframe_t* tf)
@@ -63,9 +59,10 @@ static void handle_misaligned_store(trapframe_t* tf)
 
 static void segfault(trapframe_t* tf, uintptr_t addr, const char* type)
 {
-  dump_tf(tf);
-  const char* who = (tf->status & SSTATUS_SPP) ? "Kernel" : "User";
-  panic("%s %s segfault @ %p", who, type, addr);
+//  your code here:
+//  打印trapframe
+//  判断是内核空间还是用户空间
+//  打印panic信息
 }
 
 static void handle_fault_fetch(trapframe_t* tf)
