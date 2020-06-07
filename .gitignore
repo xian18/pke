@@ -5,7 +5,9 @@ build/
 app/
 !app/*.c
 !app/*.h
-
+#pke_out.txt
+pke_out.txt
+gradelib.pyc
 #
 *.o
 *.out

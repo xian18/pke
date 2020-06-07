@@ -29,7 +29,8 @@ static void handle_illegal_instruction(trapframe_t* tf)
 //  读取tf->epc
 //  根据tf->epc得到tf->insn
 //  打印tf
-//  打印panic
+//  修改panic
+	panic("you need add your code!");
 }
 
 static void handle_breakpoint(trapframe_t* tf)
@@ -62,7 +63,8 @@ static void segfault(trapframe_t* tf, uintptr_t addr, const char* type)
 //  your code here:
 //  打印trapframe
 //  判断是内核空间还是用户空间
-//  打印panic信息
+//  修改panic信息
+ 	panic("you need add your code!");
 }
 
 static void handle_fault_fetch(trapframe_t* tf)
