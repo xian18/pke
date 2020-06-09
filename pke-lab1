@@ -7,19 +7,23 @@ runner = Runner()
 @test(0, "running app1")
 def test_app1():
 	runner.run_app('app1')
-	#print(runner.pke_out)
+
+
 
 @test(10, "test1", parent='app1')
-def test_print():
-	a = 0
-	assert a!=0, "a==0"
-    
+def test_lab1():
+        runner.match("User store segfault")
+        runner.match("0x000000008f000000")
+
+
+
 @test(0, "running app2")
 def test_app2():
 	runner.run_app('app2')
 
 @test(20, "test2", parent='app2')
 def test_lab2():
-	b = 2
+	runner.match("illegal instruction") 
+	runner.match("14005073")
 
 show_grade()	
