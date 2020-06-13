@@ -1,7 +1,11 @@
 #! /bin/bash
 #
-rm -r build
-mkdir build
+if [ ! -d "build/" ];then
+  mkdir build
+else
+  rm -r build
+  mkdir build
+fi
 cd build
-../configure --prefix=$RISCV --host=riscv64-unknown-elf
+../configure --host=riscv64-unknown-elf
 make
