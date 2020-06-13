@@ -39,7 +39,6 @@ def test(points, title=' ', parent=None):
 
 
 def show_grade():
-    print()
     print("Score: %d/%d" % (TOTAL, POSSIBLE))
 
 COLORS = {"default": "\033[0m", "red": "\033[31m", "green": "\033[32m"}
@@ -49,13 +48,19 @@ def color(name, text):
 
 class Runner():
     pke_out = ""
-    def run_app(self, app):
-        cmd = 'riscv64-unknown-elf-gcc -o app/' + app +' app/'+ app + '.c'
+    def run_build_pk(self):
+        cmd = './build.sh > pke_out.txt'
+        ret = os.system(cmd)
+        if ret != 0:
+            print(color('red', 'build pk error!'))
+            sys.exit(1)
+    def run_app(self, app, mem = '2048'):
+        cmd = 'riscv64-unknown-elf-gcc -o app/elf/' + app +' app/'+ app + '.c'
         ret = os.system(cmd)
         if ret != 0:
             print(color('red', 'running app error!'))
             sys.exit(1)
-        cmd = 'spike build/pk app/' + app+'> pke_out.txt'
+        cmd = 'spike' +' build/pk app/elf/' + app+' > pke_out.txt'
         os.system(cmd)
         self.get_pke_out()
         

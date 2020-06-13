@@ -2,9 +2,7 @@
 build/
 
 #all elf app
-app/
-!app/*.c
-!app/*.h
+app/elf
 #pke_out.txt
 pke_out.txt
 gradelib.pyc
