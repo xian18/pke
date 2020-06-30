@@ -299,9 +299,20 @@ static int sys_stub_nosys()
   return -ENOSYS;
 }
 
+
+void  sys_get_init_memsize(){
+  //  your code here:
+  //  声明mem_size
+  //  printk
+}
+
+
+
 long do_syscall(long a0, long a1, long a2, long a3, long a4, long a5, unsigned long n)
 {
   const static void* syscall_table[] = {
+  //  your code here:
+  //  add get_init_memsize syscall
     [SYS_exit] = sys_exit,
     [SYS_exit_group] = sys_exit,
     [SYS_read] = sys_read,

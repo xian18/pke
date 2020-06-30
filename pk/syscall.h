@@ -2,7 +2,7 @@
 
 #ifndef _PK_SYSCALL_H
 #define _PK_SYSCALL_H
-
+#define SYS_init_memsize 81
 #define SYS_exit 93
 #define SYS_exit_group 94
 #define SYS_getpid 172
