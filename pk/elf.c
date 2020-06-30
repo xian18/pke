@@ -91,7 +91,6 @@ void load_elf(const char* fn, elf_info* info)
       {
 
           uintptr_t vpn = a >> RISCV_PGSHIFT;
-           printk("2-1 a=%16lx \n",a);
 
           pte_t* pte = __walk_create(a);
           kassert(pte);
