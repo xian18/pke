@@ -60,7 +60,7 @@ class Runner():
         if ret != 0:
             print(color('red', 'running app error!'))
             sys.exit(1)
-        cmd = 'spike' +' obj/pke app/elf/' + app+' > pke_out.txt'
+        cmd = 'spike -m'+mem +' obj/pke app/elf/' + app+' > pke_out.txt'
         os.system(cmd)
         self.get_pke_out()
         
