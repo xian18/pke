@@ -49,7 +49,7 @@ def color(name, text):
 class Runner():
     pke_out = ""
     def run_build_pk(self):
-        cmd = './build.sh > pke_out.txt'
+        cmd = 'make > pke_out.txt'
         ret = os.system(cmd)
         if ret != 0:
             print(color('red', 'build pk error!'))
@@ -60,7 +60,7 @@ class Runner():
         if ret != 0:
             print(color('red', 'running app error!'))
             sys.exit(1)
-        cmd = 'spike' +' build/pk app/elf/' + app+' > pke_out.txt'
+        cmd = 'spike' +' obj/pke app/elf/' + app+' > pke_out.txt'
         os.system(cmd)
         self.get_pke_out()
         
