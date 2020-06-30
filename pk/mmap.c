@@ -202,24 +202,25 @@ int __valid_user_range(uintptr_t vaddr, size_t len)
 static int __handle_page_fault(uintptr_t vaddr, int prot)
 {
   printk("page fault vaddr:0x%lx\n", vaddr);
-  //you code here
-  //get pte
+  //your code here 
 
+  pte_t* pte =0;
 
   if (pte == 0 || *pte == 0 || !__valid_user_range(vaddr, 1))
     return -1;
   else if (!(*pte & PTE_V))
   {
 
-    //you code here
-
+    //your code here 
+    uintptr_t ppn =0;
+    vmr_t* v = NULL;
 
 
     if (v->file)
     {
       size_t flen = MIN(RISCV_PGSIZE, v->length - (vaddr - v->addr));
      // ssize_t ret = file_pread(v->file, (void*)vaddr, flen, vaddr - v->addr + v->offset);
-      ssize_t ret = file_pread_pnn(v->file, (void*)vaddr, flen,ppn, vaddr - v->addr + v->offset);
+      ssize_t ret = file_pread_pnn(v->file, (void*)vaddr, flen, ppn, vaddr - v->addr + v->offset);
       kassert(ret > 0);
       if (ret < RISCV_PGSIZE)
         memset((void*)vaddr + ret, 0, RISCV_PGSIZE - ret);
