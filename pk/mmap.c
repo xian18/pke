@@ -167,7 +167,7 @@ static int __handle_page_fault(uintptr_t vaddr, int prot)
   uintptr_t vpn = vaddr >> RISCV_PGSHIFT;
   vaddr = vpn << RISCV_PGSHIFT;
 
-  if (pte == 0 || *pte == 0 || !__valid_user_range(vaddr, 1))
+  if (!__valid_user_range(vaddr, 1))
     return -1;
   return 0;
 }
