@@ -1,10 +1,11 @@
 // See LICENSE for license details.
-
+#include "pmm.h"
 #include "mmap.h"
 #include "atomic.h"
 #include "pk.h"
 #include "boot.h"
 #include "bits.h"
+#include "defs.h"
 #include "mtrap.h"
 #include <stdint.h>
 #include <errno.h>
@@ -29,7 +30,7 @@ static size_t free_pages;
 
 int demand_paging = 1; // unless -p flag is given
 
-static uintptr_t __page_alloc()
+uintptr_t __page_alloc()
 {
   kassert(next_free_page != free_pages);
   uintptr_t addr = first_free_page + RISCV_PGSIZE * next_free_page++;
@@ -75,23 +76,44 @@ static void __vmr_decref(vmr_t* v, unsigned dec)
       file_decref(v->file);
   }
 }
-
+/* PTE(页表项)与PDE（页目录项）的结构
+31                     20 19                10 9      8 7 6 5 4 3 2 1 0
++------------------------+--------------------+--------+---------------+
+|         PPN[1]         |       PPN[0]       |Reserved|D|A|G|U|X|W|R|V|
++-----------12-----------+---------10---------+----2---+-------8-------+
+*/
 static size_t pte_ppn(pte_t pte)
 {
   return pte >> PTE_PPN_SHIFT;
 }
 
+
+/*
+一个虚拟地址的结构如下
+31                 22 21                12 11                     0
++--------------------+--------------------+------------------------+
+|       VPN[1]       |       VPN[0]       |      page offset       |
++---------10---------+---------10---------+----------12------------+
+
+一个物理地址（34位）的结构如下
+33                     22 21                12 11                     0
++------------------------+--------------------+------------------------+
+|         PPN[1]         |       PPN[0]       |       page offset      |
++-----------12-----------+---------10---------+-----------12-----------+
+不过pk实际只用了低32位,和虚拟地址一样
+*/
 static uintptr_t ppn(uintptr_t addr)
 {
   return addr >> RISCV_PGSHIFT;
 }
 
+//level = 1, 得到vpn[1]，即页目录项在一级页表的序号
+//level = 0, 得到vpn[0]，即页表项在二级页表的序号
 static size_t pt_idx(uintptr_t addr, int level)
 {
   size_t idx = addr >> (RISCV_PGLEVEL_BITS*level + RISCV_PGSHIFT);
   return idx & ((1 << RISCV_PGLEVEL_BITS) - 1);
 }
-
 
 static pte_t* __attribute__((noinline)) __continue_walk_create(uintptr_t addr, pte_t* pte)
 {
@@ -99,6 +121,7 @@ static pte_t* __attribute__((noinline)) __continue_walk_create(uintptr_t addr, p
   return __walk_create(addr);
 }
 
+//获得二级页表项
 static pte_t* __walk_internal(uintptr_t addr, int create)
 {
   pte_t* t = root_page_table;
@@ -111,7 +134,7 @@ static pte_t* __walk_internal(uintptr_t addr, int create)
   return &t[pt_idx(addr, 0)];
 }
 
-static pte_t* __walk(uintptr_t addr)
+ pte_t* __walk(uintptr_t addr)
 {
   return __walk_internal(addr, 0);
 }
@@ -144,6 +167,19 @@ static uintptr_t __vm_alloc(size_t npage)
   return 0;
 }
 
+/*
+页表项的标志位部分
+page table entry (PTE) fields 
+#define PTE_V     0x001 // Valid
+#define PTE_R     0x002 // Read
+#define PTE_W     0x004 // Write
+#define PTE_X     0x008 // Execute
+#define PTE_U     0x010 // User
+#define PTE_G     0x020 // Global
+#define PTE_A     0x040 // Accessed
+#define PTE_D     0x080 // Dirty
+#define PTE_SOFT  0x300 // Reserved for Software
+*/
 inline pte_t prot_to_type(int prot, int user)
 {
   pte_t pte = 0;
@@ -155,6 +191,7 @@ inline pte_t prot_to_type(int prot, int user)
   return pte;
 }
 
+//用户地址是否越界（段错误警告）
 int __valid_user_range(uintptr_t vaddr, size_t len)
 {
   if (vaddr + len < vaddr)
@@ -387,5 +424,7 @@ uintptr_t pk_vm_init()
   write_csr(sptbr, ((uintptr_t)root_page_table >> RISCV_PGSHIFT) | SATP_MODE_CHOICE);
 
   uintptr_t kernel_stack_top = __page_alloc() + RISCV_PGSIZE;
+ 
+  pmm_init();
   return kernel_stack_top;
 }

@@ -114,7 +114,7 @@ mkdir_obj :
 	@test -d $(obj_dir) || mkdir $(obj_dir)
 
 
-pk_objs := file.o syscall.o handlers.o frontend.o elf.o console.o mmap.o
+pk_objs := file.o syscall.o handlers.o frontend.o elf.o console.o mmap.o pmm.o
 pk_asm_objs := entry.o
 obj_pk_objs := $(addprefix $(obj_dir)/, $(pk_objs))
 obj_pk_asm_objs := $(addprefix $(obj_dir)/, $(pk_asm_objs))

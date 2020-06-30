@@ -1,5 +1,5 @@
 // See LICENSE for license details.
-
+#include "vm.h"
 #ifndef _MMAP_H
 #define _MMAP_H
 
@@ -37,8 +37,16 @@ uintptr_t do_brk(uintptr_t addr);
 pte_t* __walk_create(uintptr_t addr);
 pte_t prot_to_type(int prot, int user);
 
-#define va2pa(va) ({ uintptr_t __va = (uintptr_t)(va); \
-  extern uintptr_t first_free_paddr; \
-  __va >= DRAM_BASE ? __va : __va + first_free_paddr; })
+ #define va2pa(va) ({ uintptr_t __va = (uintptr_t)(va); \
+   extern uintptr_t first_free_paddr; \
+     __va >= DRAM_BASE ? __va : __va + first_free_paddr; })
+
+
+pte_t* __walk(uintptr_t addr);
+#define va2pa_unfixed(va) ({    pte_t* pte = __walk((uintptr_t)va);  \
+  uintptr_t pnn= ((uintptr_t)(*pte)) >> PTE_PPN_SHIFT; \
+ uintptr_t pa = (pnn << RISCV_PGSHIFT) | ((uintptr_t)va&0xfff) ; \
+	 uintptr_t pa1 = va2pa(va); \
+	 (uintptr_t) va>=DRAM_BASE ? pa1 :pa ;  })
 
 #endif
