@@ -23,6 +23,7 @@ typedef struct {
 static spinlock_t vm_lock = SPINLOCK_INIT;
 static vmr_t* vmrs;
 
+uintptr_t kernel_stack_top; 
 uintptr_t first_free_paddr;
 static uintptr_t first_free_page;
 static size_t next_free_page;
