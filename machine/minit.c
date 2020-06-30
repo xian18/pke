@@ -94,7 +94,6 @@ static void memory_init()
 static void hart_init()
 {
   mstatus_init();
-  fp_init();
 #ifndef BBL_BOOT_MACHINE
   delegate_traps();
 #endif /* BBL_BOOT_MACHINE */

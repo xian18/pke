@@ -119,8 +119,8 @@ pk_asm_objs := entry.o
 obj_pk_objs := $(addprefix $(obj_dir)/, $(pk_objs))
 obj_pk_asm_objs := $(addprefix $(obj_dir)/, $(pk_asm_objs))
 
-machine_objs := fdt.o mtrap.o minit.o htif.o emulation.o muldiv_emulation.o fp_ldst.o uart.o uart16550.o finisher.o misaligned_ldst.o flush_icache.o
-machine_asm_objs := mentry.o fp_asm.o
+machine_objs := fdt.o mtrap.o minit.o htif.o emulation.o muldiv_emulation.o  uart.o uart16550.o finisher.o misaligned_ldst.o flush_icache.o
+machine_asm_objs := mentry.o 
 obj_machine_objs := $(addprefix $(obj_dir)/, $(machine_objs))
 obj_machine_asm_objs := $(addprefix $(obj_dir)/, $(machine_asm_objs))
 
