@@ -92,7 +92,6 @@ static size_t pt_idx(uintptr_t addr, int level)
   return idx & ((1 << RISCV_PGLEVEL_BITS) - 1);
 }
 
-static pte_t* __walk_create(uintptr_t addr);
 
 static pte_t* __attribute__((noinline)) __continue_walk_create(uintptr_t addr, pte_t* pte)
 {
@@ -117,7 +116,7 @@ static pte_t* __walk(uintptr_t addr)
   return __walk_internal(addr, 0);
 }
 
-static pte_t* __walk_create(uintptr_t addr)
+pte_t* __walk_create(uintptr_t addr)
 {
   return __walk_internal(addr, 1);
 }
@@ -145,7 +144,7 @@ static uintptr_t __vm_alloc(size_t npage)
   return 0;
 }
 
-static inline pte_t prot_to_type(int prot, int user)
+inline pte_t prot_to_type(int prot, int user)
 {
   pte_t pte = 0;
   if (prot & PROT_READ) pte |= PTE_R | PTE_A;

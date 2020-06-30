@@ -23,9 +23,11 @@ static inline int get_prot(uint32_t p_flags)
   return (prot_x | prot_w | prot_r);
 }
 
+
+
 void load_elf(const char* fn, elf_info* info)
 {
-  file_t* file = file_open(fn, O_RDONLY, 0);
+	 file_t* file = file_open(fn, O_RDONLY, 0);
   if (IS_ERR_VALUE(file))
     goto fail;
 
@@ -63,31 +65,49 @@ void load_elf(const char* fn, elf_info* info)
       max_vaddr = MAX(max_vaddr, ph[i].p_vaddr + ph[i].p_memsz);
   max_vaddr = ROUNDUP(max_vaddr, RISCV_PGSIZE);
 
-  // don't load dynamic linker at 0, else we can't catch NULL pointer derefs
+   // don't load dynamic linker at 0, else we can't catch NULL pointer derefs
   uintptr_t bias = 0;
   if (eh.e_type == ET_DYN)
     bias = RISCV_PGSIZE;
 
   info->entry = eh.e_entry + bias;
   int flags = MAP_FIXED | MAP_PRIVATE;
+
+
+   extern uintptr_t first_free_paddr;
+
+   extern elf_info current;
   for (int i = eh.e_phnum - 1; i >= 0; i--) {
     if(ph[i].p_type == PT_LOAD && ph[i].p_memsz) {
       uintptr_t prepad = ph[i].p_vaddr % RISCV_PGSIZE;
       uintptr_t vaddr = ph[i].p_vaddr + bias;
+
       if (vaddr + ph[i].p_memsz > info->brk_min)
         info->brk_min = vaddr + ph[i].p_memsz;
       int flags2 = flags | (prepad ? MAP_POPULATE : 0);
       int prot = get_prot(ph[i].p_flags);
-      if (__do_mmap(vaddr - prepad, ph[i].p_filesz + prepad, prot | PROT_WRITE, flags2, file, ph[i].p_offset - prepad) != vaddr - prepad)
-        goto fail;
-      memset((void*)vaddr - prepad, 0, prepad);
-      if (!(prot & PROT_WRITE))
-        if (do_mprotect(vaddr - prepad, ph[i].p_filesz + prepad, prot))
-          goto fail;
-      size_t mapped = ROUNDUP(ph[i].p_filesz + prepad, RISCV_PGSIZE) - prepad;
-      if (ph[i].p_memsz > mapped)
-        if (__do_mmap(vaddr + mapped, ph[i].p_memsz - mapped, prot, flags|MAP_ANONYMOUS, 0, 0) != vaddr + mapped)
-          goto fail;
+
+      for (uintptr_t a = vaddr-prepad; a < vaddr+ph[i].p_filesz; a += RISCV_PGSIZE)
+      {
+
+          uintptr_t vpn = a >> RISCV_PGSHIFT;
+           printk("2-1 a=%16lx \n",a);
+
+          pte_t* pte = __walk_create(a);
+          kassert(pte);
+          uintptr_t ppn = vpn + (first_free_paddr / RISCV_PGSIZE);
+
+          *pte = pte_create(ppn, prot_to_type(prot|PROT_WRITE, 0));
+
+          flush_tlb();
+
+          size_t flen = MIN(RISCV_PGSIZE, ph[i].p_filesz -a+vaddr);
+          size_t ret = file_pread(file, (void*)a, flen, a- vaddr + ph[i].p_offset);
+
+          kassert(ret);
+       *pte = pte_create(ppn, prot_to_type(prot|PROT_READ|PROT_WRITE, 1));
+         }
+
     }
   }
 
@@ -96,4 +116,6 @@ void load_elf(const char* fn, elf_info* info)
 
 fail:
   panic("couldn't open ELF program: %s!", fn);
+
 }
+
