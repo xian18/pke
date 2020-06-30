@@ -116,3 +116,11 @@ start_user:
 
   # gtfo
   sret
+
+    .globl forkrets
+forkrets:
+    # set stack to this new process's trapframe
+    move sp, a0
+    addi sp,sp,320
+    csrw sscratch,sp
+    j start_user

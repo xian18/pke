@@ -66,6 +66,11 @@ void file_init()
 file_t* file_get(int fd)
 {
   file_t* f;
+
+  if((f = atomic_read(&fds[fd])) == NULL){
+    file_init();
+
+}
   if (fd < 0 || fd >= MAX_FDS || (f = atomic_read(&fds[fd])) == NULL)
     return 0;
 

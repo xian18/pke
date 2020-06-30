@@ -23,6 +23,7 @@ typedef struct {
   size_t time0;
   size_t cycle0;
   size_t instret0;
+  char file_name[20];
 } elf_info;
 
 extern elf_info current;

@@ -15,9 +15,9 @@ extern uintptr_t first_free_paddr;
 extern uintptr_t mem_size;
 extern uintptr_t first_free_page;
 int pmm_init(){
-	pages= (struct Page *) __page_alloc();
+    pages= (struct Page *) __page_alloc();
 
-   	nbase = ROUNDUP(first_free_paddr,RISCV_PGSIZE)>>RISCV_PGSHIFT;	
+    nbase = ROUNDUP(first_free_paddr,RISCV_PGSIZE)>>RISCV_PGSHIFT;  
     pmm_manager = &default_pmm_manager;
     pmm_manager->init();
     pmm_manager->init_memmap(pa2page(first_free_paddr), mem_size/RISCV_PGSIZE);
@@ -25,7 +25,7 @@ int pmm_init(){
     return 0;
 }
 int pk_default_pmm_alloc(){
-	return 0;
+    return 0;
 }
 
 
