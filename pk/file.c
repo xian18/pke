@@ -8,7 +8,7 @@
 #include "pk.h"
 #include <string.h>
 #include <errno.h>
-
+#include "encoding.h"
 #define MAX_FDS 128
 static file_t* fds[MAX_FDS];
 #define MAX_FILES 128
@@ -120,7 +120,7 @@ int fd_close(int fd)
 ssize_t file_read(file_t* f, void* buf, size_t size)
 {
   populate_mapping(buf, size, PROT_WRITE);
-  return frontend_syscall(SYS_read, f->kfd, va2pa(buf), size, 0, 0, 0, 0);
+  return frontend_syscall(SYS_read, f->kfd, va2pa_unfixed(buf), size, 0, 0, 0, 0);
 }
 
 ssize_t file_pread(file_t* f, void* buf, size_t size, off_t offset)
@@ -129,10 +129,25 @@ ssize_t file_pread(file_t* f, void* buf, size_t size, off_t offset)
   return frontend_syscall(SYS_pread, f->kfd, va2pa(buf), size, offset, 0, 0, 0);
 }
 
+
+ssize_t file_pread_pnn(file_t* f, void* buf, size_t size, uintptr_t pnn,off_t offset)
+{
+  populate_mapping(buf, size, PROT_WRITE);
+  uintptr_t pa= (pnn << RISCV_PGSHIFT)|((uintptr_t)buf & 0x111);
+  return frontend_syscall(SYS_pread, f->kfd, pa, size, offset, 0, 0, 0);
+}
+
 ssize_t file_write(file_t* f, const void* buf, size_t size)
 {
   populate_mapping(buf, size, PROT_READ);
   return frontend_syscall(SYS_write, f->kfd, va2pa(buf), size, 0, 0, 0, 0);
+}
+
+ssize_t file_write_unfixed(file_t* f, const void* buf, size_t size)
+{
+  populate_mapping(buf, size, PROT_READ);
+
+  return frontend_syscall(SYS_write, f->kfd, va2pa_unfixed(buf), size, 0, 0, 0, 0);
 }
 
 ssize_t file_pwrite(file_t* f, const void* buf, size_t size, off_t offset)

@@ -63,7 +63,7 @@ ssize_t sys_write(int fd, const char* buf, size_t n)
 
   if (f)
   {
-    r = file_write(f, buf, n);
+    r = file_write_unfixed(f, buf, n);
     file_decref(f);
   }
 

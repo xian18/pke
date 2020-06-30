@@ -201,11 +201,40 @@ int __valid_user_range(uintptr_t vaddr, size_t len)
 
 static int __handle_page_fault(uintptr_t vaddr, int prot)
 {
-  uintptr_t vpn = vaddr >> RISCV_PGSHIFT;
-  vaddr = vpn << RISCV_PGSHIFT;
+  printk("page fault vaddr:0x%lx\n", vaddr);
+  //you code here
+  //get pte
 
-  if (!__valid_user_range(vaddr, 1))
+
+  if (pte == 0 || *pte == 0 || !__valid_user_range(vaddr, 1))
     return -1;
+  else if (!(*pte & PTE_V))
+  {
+
+    //you code here
+
+
+
+    if (v->file)
+    {
+      size_t flen = MIN(RISCV_PGSIZE, v->length - (vaddr - v->addr));
+     // ssize_t ret = file_pread(v->file, (void*)vaddr, flen, vaddr - v->addr + v->offset);
+      ssize_t ret = file_pread_pnn(v->file, (void*)vaddr, flen,ppn, vaddr - v->addr + v->offset);
+      kassert(ret > 0);
+      if (ret < RISCV_PGSIZE)
+        memset((void*)vaddr + ret, 0, RISCV_PGSIZE - ret);
+    }
+    else
+      memset((void*)vaddr, 0, RISCV_PGSIZE);
+    __vmr_decref(v, 1);
+    *pte = pte_create(ppn, prot_to_type(v->prot, 1));
+  }
+
+  pte_t perms = pte_create(0, prot_to_type(prot, 1));
+  if ((*pte & perms) != perms)
+    return -1;
+
+  flush_tlb();
   return 0;
 }
 

@@ -27,6 +27,8 @@ int file_dup(file_t*);
 file_t* file_openat(int dirfd, const char* fn, int flags, int mode);
 ssize_t file_pwrite(file_t* f, const void* buf, size_t n, off_t off);
 ssize_t file_pread(file_t* f, void* buf, size_t n, off_t off);
+ssize_t file_pread_pnn(file_t* f, void* buf, size_t size, uintptr_t pnn,off_t offset); //file.h
+ssize_t file_write_unfixed(file_t* f, const void* buf, size_t size);
 ssize_t file_write(file_t* f, const void* buf, size_t n);
 ssize_t file_read(file_t* f, void* buf, size_t n);
 ssize_t file_lseek(file_t* f, size_t ptr, int dir);
