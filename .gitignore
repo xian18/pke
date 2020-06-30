@@ -1,5 +1,5 @@
 #all labs build
-build/
+obj/
 
 #all elf app
 app/elf/
