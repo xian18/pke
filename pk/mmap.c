@@ -167,36 +167,8 @@ static int __handle_page_fault(uintptr_t vaddr, int prot)
   uintptr_t vpn = vaddr >> RISCV_PGSHIFT;
   vaddr = vpn << RISCV_PGSHIFT;
 
-  pte_t* pte = __walk(vaddr);
-
   if (pte == 0 || *pte == 0 || !__valid_user_range(vaddr, 1))
     return -1;
-  else if (!(*pte & PTE_V))
-  {
-    uintptr_t ppn = vpn + (first_free_paddr / RISCV_PGSIZE);
-
-    vmr_t* v = (vmr_t*)*pte;
-    *pte = pte_create(ppn, prot_to_type(PROT_READ|PROT_WRITE, 0));
-    flush_tlb();
-    if (v->file)
-    {
-      size_t flen = MIN(RISCV_PGSIZE, v->length - (vaddr - v->addr));
-      ssize_t ret = file_pread(v->file, (void*)vaddr, flen, vaddr - v->addr + v->offset);
-      kassert(ret > 0);
-      if (ret < RISCV_PGSIZE)
-        memset((void*)vaddr + ret, 0, RISCV_PGSIZE - ret);
-    }
-    else
-      memset((void*)vaddr, 0, RISCV_PGSIZE);
-    __vmr_decref(v, 1);
-    *pte = pte_create(ppn, prot_to_type(v->prot, 1));
-  }
-
-  pte_t perms = pte_create(0, prot_to_type(prot, 1));
-  if ((*pte & perms) != perms)
-    return -1;
-
-  flush_tlb();
   return 0;
 }
 

@@ -77,7 +77,15 @@ void load_elf(const char* fn, elf_info* info)
    extern uintptr_t first_free_paddr;
 
    extern elf_info current;
-  for (int i = eh.e_phnum - 1; i >= 0; i--) {
+  uintptr_t stack_top=current.stack_top - current.phdr_size;
+
+   pte_t* pte_stack = __walk_create(stack_top-stack_top%RISCV_PGSIZE);
+   kassert(pte_stack);
+   uintptr_t ppn_stack = (stack_top>>RISCV_PGSHIFT) + (first_free_paddr / RISCV_PGSIZE);
+   *pte_stack = pte_create(ppn_stack, prot_to_type(PROT_READ|PROT_WRITE, 1));
+
+
+   for (int i = eh.e_phnum - 1; i >= 0; i--) {
     if(ph[i].p_type == PT_LOAD && ph[i].p_memsz) {
       uintptr_t prepad = ph[i].p_vaddr % RISCV_PGSIZE;
       uintptr_t vaddr = ph[i].p_vaddr + bias;
