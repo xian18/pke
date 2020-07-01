@@ -203,18 +203,22 @@ static int __handle_page_fault(uintptr_t vaddr, int prot)
 {
   printk("page fault vaddr:0x%lx\n", vaddr);
   //your code here 
+  //start------------>
+  	pte_t* pte =0;
 
-  pte_t* pte =0;
-
+  //<-----------end
   if (pte == 0 || *pte == 0 || !__valid_user_range(vaddr, 1))
     return -1;
   else if (!(*pte & PTE_V))
   {
 
-    //your code here 
-    uintptr_t ppn =0;
-    vmr_t* v = NULL;
+    //your code here
+    //start--------->
 
+   	 uintptr_t ppn =0;
+   	 vmr_t* v = NULL;
+   
+    //<----------end
 
     if (v->file)
     {
