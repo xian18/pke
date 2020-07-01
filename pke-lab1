@@ -10,7 +10,7 @@ def test_build_pk():
 
 @test(0, "running app1")
 def test_app1():
-	runner.run_app('app1')
+	runner.run_app('app1_1')
 
 
 
@@ -23,7 +23,7 @@ def test_lab1():
 
 @test(0, "running app2")
 def test_app2():
-	runner.run_app('app2')
+	runner.run_app('app1_2')
 
 @test(20, "test2", parent='app2')
 def test_lab2():
