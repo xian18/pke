@@ -11,7 +11,7 @@ def test_build_pk():
 	
 @test(0, "running app3 m2048")
 def test_app3_m2048():
-	runner.run_app('app2')
+	runner.run_app('app2_1')
 
 @test(10, "test3_m2048", parent='app3')
 def test_lab3_m2048():
@@ -19,7 +19,7 @@ def test_lab3_m2048():
 
 @test(0, "running app3 m1024")
 def test_app3_m1024():
-	runner.run_app('app2', mem = '1024')
+	runner.run_app('app2_1', mem = '1024')
 
 @test(10, "test3_m1024", parent='app3')
 def test_lab3_m1024():
