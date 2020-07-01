@@ -57,7 +57,7 @@ alloc_proc(void) {
     //truct proc_struct *proc = kmalloc(sizeof(struct proc_struct));
     struct proc_struct *proc = (struct proc_struct*)__page_alloc();
     if (proc != NULL) {
-    //LAB4:EXERCISE1 YOUR CODE
+    //LAB5:EXERCISE1 YOUR CODE
     /*
      * below fields in proc_struct need to be initialized
      *       enum proc_state state;                      // Process state
@@ -252,11 +252,11 @@ do_fork(uint32_t clone_flags, uintptr_t stack, trapframe_t *tf) {
         goto fork_out;
     }
     ret = -E_NO_MEM;
-    //LAB4:EXERCISE2 YOUR CODE
+    //LAB5:EXERCISE2 YOUR CODE
     
 //      * Some Useful MACROs, Functions and DEFINEs, you can use them in below implementation.
 //      * MACROs or Functions:
-//      *   alloc_proc:   create a proc struct and init fields (lab4:exercise1)
+//      *   alloc_proc:   create a proc struct and init fields (lab5:exercise1)
 //      *   setup_kstack: alloc pages with size KSTACKPAGE as process kernel stack
 //      *   copy_mm:      process "proc" duplicate OR share process "current"'s mm according clone_flags
 //      *                 if clone_flags & CLONE_VM, then "share" ; else "duplicate"
