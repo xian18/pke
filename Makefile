@@ -29,7 +29,7 @@
 default : all
 .PHONY : default
 
-project_name := riscv-pk
+project_name := pke
 src_dir      := .
 obj_dir      := obj
 # scripts_dir  := $(src_dir)/scripts
@@ -109,6 +109,13 @@ RUNFLAGS      := @RUNFLAGS@
 
 all : mkdir_obj $(obj_dir)/pke
 .PHONY : all
+
+cscope:
+	find ./ -name "*.c" > cscope.files
+	find ./ -name "*.h" >> cscope.files
+	find ./ -name "*.S" >> cscope.files
+	find ./ -name "*.lds" >> cscope.files
+	cscope -bqk
 
 mkdir_obj :
 	@test -d $(obj_dir) || mkdir $(obj_dir)
