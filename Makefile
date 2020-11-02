@@ -26,12 +26,13 @@
 % : SCCS/s.%
 
 # Default is to build the prereqs of the all target (defined at bottom)
-default : all
+default : all app_elf 
 .PHONY : default
 
 project_name := pke
 src_dir      := .
 obj_dir      := obj
+
 # scripts_dir  := $(src_dir)/scripts
 
 # If the version information is not in the configure script, then we
@@ -121,6 +122,7 @@ mkdir_obj :
 	@test -d $(obj_dir) || mkdir $(obj_dir)
 
 
+app_elf_str := $(notdir $(basename $(wildcard app/*.c)))
 pk_objs := file.o syscall.o handlers.o frontend.o elf.o console.o mmap.o
 pk_asm_objs := entry.o
 obj_pk_objs := $(addprefix $(obj_dir)/, $(pk_objs))
@@ -177,4 +179,11 @@ $(obj_dir)/pk.o : pk.c
 
 clean :
 	rm -rf $(obj_dir)
+#app
+app_elf:
+	@mkdir -p app/elf
+	@for target in $(app_elf_str); \
+	do                        \
+	$(COMPILE)  -o app/elf/$$target app/$$target.c; \
+	done
 

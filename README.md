@@ -26,5 +26,11 @@ will be:
 
 `$git merge -m "merge from lab1" lab1_small`
 
+
+
+**Documents in CHINESE can be found [here](https://gitee.com/syivester/pke-doc).**
+
+
+
 enjoy!
 
