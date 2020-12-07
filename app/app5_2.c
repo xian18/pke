@@ -29,7 +29,7 @@ void remove_item(){
          a=a*i+1;
      }
 
-    printf("printf 5_2 consume one  item,child %d total consume %d  random %x\n",getpid(),items,a);
+    printf("printf 5_2 consume one  item,child %d total consume %d  random %x\n",do_getpid(),items,a);
 }
 
 void consume_item(){
@@ -94,7 +94,7 @@ int main(){
     int i;
 
     for(i=0; i<2; i++){
-        pid=fork();
+        pid=do_fork();
         if(pid==0||pid==-1)  //子进程或创建进程失败均退出
         {
             break;
@@ -102,12 +102,12 @@ int main(){
     }
     if(pid==0) {
         // 
-        printf("printf 5_2 child %d\n",getpid());
-        consumer(getpid());      
+        printf("printf 5_2 child %d\n",do_getpid());
+        consumer(do_getpid());      
         
     }else{
         // 
-        printf("printf 5_2 father %d \n",getpid());
+        printf("printf 5_2 father %d \n",do_getpid());
         producer();
     
     }

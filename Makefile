@@ -183,7 +183,7 @@ app_elf:
 	@mkdir -p app/elf
 	for target in $(app_elf_str); \
 	do                        \
-	$(COMPILE)  -o app/elf/$$target app/$$target.c; \
+	$(CC)  app/$$target.c  -o app/elf/$$target  -I app/include -L app/lib -luser; \
 	done
 
 objdump:
