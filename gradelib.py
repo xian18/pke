@@ -1,12 +1,12 @@
 from __future__ import print_function
 import sys, os, re, traceback
 
-
-
+dir = '/data/workspace/myshixun/src/step1/'
+#dir='./'
 TOTAL = POSSIBLE = 0
 
 def test_app(app):
-    cmd = 'spike build/pk app/' + app+'>> pke_out.txt'
+    cmd = 'spike build/pk '+dir+'/app/' + app+'>> pke_out.txt'
     os.system(cmd)
 
 def test(points, title=' ', parent=None):
@@ -31,7 +31,8 @@ def test(points, title=' ', parent=None):
         
         if fail:
             print(color("red", "FAIL"))
-            print("    %s" % fail.replace("\n", "\n    "))
+            print("    %s" % fail)
+        #    print("    %s" % fail.replace("\n", "\n    "))
         else:
             print(color("green", "OK"))
             TOTAL += points
@@ -41,7 +42,8 @@ def test(points, title=' ', parent=None):
 def show_grade():
     print("Score: %d/%d" % (TOTAL, POSSIBLE))
 
-COLORS = {"default": "\033[0m", "red": "\033[31m", "green": "\033[32m"}
+COLORS = {"default": "", "red": "", "green": ""}
+
 
 def color(name, text):
     return COLORS[name] + text + COLORS["default"]
@@ -49,18 +51,18 @@ def color(name, text):
 class Runner():
     pke_out = ""
     def run_build_pk(self):
-        cmd = 'make > pke_out.txt'
+        cmd = 'make -C '+dir+' > pke_out.txt'
         ret = os.system(cmd)
         if ret != 0:
             print(color('red', 'build pk error!'))
             sys.exit(1)
     def run_app(self, app, mem = '2048'):
-        cmd = 'riscv64-unknown-elf-gcc -o app/elf/' + app +' app/'+ app + '.c'
+        cmd = 'riscv64-unknown-elf-gcc -o '+dir+'app/elf/' + app +' '+dir+'app/'+ app + '.c'
         ret = os.system(cmd)
         if ret != 0:
             print(color('red', 'running app error!'))
             sys.exit(1)
-        cmd = 'spike' +' obj/pke app/elf/' + app+' > pke_out.txt'
+        cmd = 'spike -m'+mem +' '+dir+'obj/pke '+dir+'app/elf/' + app+' > pke_out.txt'
         os.system(cmd)
         self.get_pke_out()
         

@@ -8,7 +8,7 @@
 #include "pk.h"
 #include <string.h>
 #include <errno.h>
-
+#include "encoding.h"
 #define MAX_FDS 128
 static file_t* fds[MAX_FDS];
 #define MAX_FILES 128
@@ -66,6 +66,10 @@ void file_init()
 file_t* file_get(int fd)
 {
   file_t* f;
+  //++++
+  if((f = atomic_read(&fds[fd])) == NULL){
+    file_init();
+  }
   if (fd < 0 || fd >= MAX_FDS || (f = atomic_read(&fds[fd])) == NULL)
     return 0;
 
@@ -117,10 +121,10 @@ int fd_close(int fd)
   return 0;
 }
 
-ssize_t file_read(file_t* f, void* buf, size_t size)
+ssize_t file_read(file_t* f, void* buf, size_t size,pte_t *pagetable)
 {
   populate_mapping(buf, size, PROT_WRITE);
-  return frontend_syscall(SYS_read, f->kfd, va2pa(buf), size, 0, 0, 0, 0);
+  return frontend_syscall(SYS_read, f->kfd, va2pa_unfixed(buf,pagetable), size, 0, 0, 0, 0);
 }
 
 ssize_t file_pread(file_t* f, void* buf, size_t size, off_t offset)
@@ -129,10 +133,31 @@ ssize_t file_pread(file_t* f, void* buf, size_t size, off_t offset)
   return frontend_syscall(SYS_pread, f->kfd, va2pa(buf), size, offset, 0, 0, 0);
 }
 
+
+ssize_t file_pread_pnn(file_t* f, void* buf, size_t size, uintptr_t pnn,off_t offset)
+{
+  uintptr_t pa= (pnn << RISCV_PGSHIFT)|((uintptr_t)buf & 0x111);
+  populate_mapping((void *)pa, size, PROT_WRITE); 
+  return frontend_syscall(SYS_pread, f->kfd, pa, size, offset, 0, 0, 0);
+}
+
 ssize_t file_write(file_t* f, const void* buf, size_t size)
 {
   populate_mapping(buf, size, PROT_READ);
   return frontend_syscall(SYS_write, f->kfd, va2pa(buf), size, 0, 0, 0, 0);
+}
+
+ssize_t file_write_unfixed(file_t* f, const void* buf, size_t size,pte_t *pagetable)
+{
+  // populate_mapping(buf, size, PROT_READ);
+
+  // return frontend_syscall(SYS_write, f->kfd, va2pa_unfixed(buf,pagetable), size, 0, 0, 0, 0);
+  
+   pte_t *pte=__walk_internal_user(pagetable,(uint64_t)buf,0);
+   uint64_t pa=PTE2PA(*pte);
+   populate_mapping((void *)pa, size, PROT_WRITE);
+   return frontend_syscall(SYS_write, f->kfd, va2pa_unfixed(buf,pagetable), size, 0, 0, 0, 0);
+
 }
 
 ssize_t file_pwrite(file_t* f, const void* buf, size_t size, off_t offset)

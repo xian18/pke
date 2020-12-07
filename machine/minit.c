@@ -158,6 +158,10 @@ void init_first_hart(uintptr_t hartid, uintptr_t dtb)
   query_uart16550(dtb);
   query_htif(dtb);
   printm("PKE IS RUNNING\r\n");
+  extern volatile uint64_t tohost;
+  extern volatile uint64_t fromhost;
+  printm("to host %d\n",tohost);
+  printm("from host %d\n",fromhost);
 
   hart_init();
   hls_init(0); // this might get called again from parse_config_string

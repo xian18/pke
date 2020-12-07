@@ -12,6 +12,14 @@ pk_hdrs = \
 	mmap.h \
 	pk.h \
 	syscall.h \
+	console.h \
+	pmm.h     \
+	list.h \
+	defs.h \
+    proc.h \
+    sched.h \
+    error.h \
+	
 
 pk_c_srcs = \
 	file.c \
@@ -21,9 +29,15 @@ pk_c_srcs = \
 	elf.c \
 	console.c \
 	mmap.c \
+	pmm.c  \
+    proc.c \
+    sched.c \
+
 
 pk_asm_srcs = \
 	entry.S \
+    procEntry.S \
+    switch.S \
 
 pk_test_srcs =
 

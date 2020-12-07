@@ -1,0 +1,30 @@
+#!/usr/bin/env python
+
+
+from gradelib import *
+
+runner = Runner()
+
+@test(0, "build pk")
+def test_build_pk():
+	runner.run_build_pk()
+	
+@test(0, "running app4_1")
+def test_app4_1():
+	runner.run_app('app4_1')
+
+@test(10, "test4_1", parent='app4_1')
+def test_lab4():
+    runner.match("page fault vaddr:0x000000007f000000");
+    runner.match("page fault vaddr:0x000000007f001000");
+
+@test(0, "running app4_2")
+def test_app3_m1024():
+	runner.run_app('app4_2')
+
+@test(10, "test4_2", parent='app4_2')
+def test_lab3_m1024():
+    runner.match("end  ")
+
+show_grade()	
+

@@ -1,0 +1,22 @@
+#!/usr/bin/env python
+#coding:utf-8
+
+from gradelib import *
+
+runner = Runner()
+
+@test(0, "build pk")
+def test_build_pk():
+	runner.run_build_pk()
+	
+@test(0, "running app5")
+def test_app4():
+	runner.run_app('app5')
+
+@test(20, "test fork", parent='app5')
+def test_fork():
+    runner.match("this is father process;my pid = 1")
+    runner.match("this is child process;my pid = 2")
+
+show_grade()	
+

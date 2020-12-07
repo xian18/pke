@@ -22,6 +22,7 @@ uintptr_t htif;
 
 static void __check_fromhost()
 {
+ 
   uint64_t fh = fromhost;
   if (!fh)
     return;
@@ -42,7 +43,7 @@ static void __check_fromhost()
 
 static void __set_tohost(uintptr_t dev, uintptr_t cmd, uintptr_t data)
 {
-  while (tohost)
+  while (tohost)  //?????
     __check_fromhost();
   tohost = TOHOST_CMD(dev, cmd, data);
 }

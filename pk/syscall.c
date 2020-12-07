@@ -1,5 +1,5 @@
 // See LICENSE for license details.
-
+#include <stdint.h>
 #include "syscall.h"
 #include "pk.h"
 #include "file.h"
@@ -8,6 +8,10 @@
 #include "boot.h"
 #include <string.h>
 #include <errno.h>
+#include "proc.h"
+#include "sched.h"
+#include "semap.h"
+#include "defs.h"
 
 typedef long (*syscall_t)(long, long, long, long, long, long, long);
 
@@ -15,6 +19,12 @@ typedef long (*syscall_t)(long, long, long, long, long, long, long);
 
 void sys_exit(int code)
 {
+ // printk("sys_exit pid=%d\n",currentproc->pid);
+  do_exit(code);
+  // currentproc->need_resched=1;
+  // if(currentproc->need_resched){
+  //    schedule();
+  // }
   if (current.cycle0) {
     size_t dt = rdtime() - current.time0;
     size_t dc = rdcycle() - current.cycle0;
@@ -35,7 +45,7 @@ ssize_t sys_read(int fd, char* buf, size_t n)
 
   if (f)
   {
-    r = file_read(f, buf, n);
+    r = file_read(f, buf, n,(pte_t *)currentproc->upagetable);
     file_decref(f);
   }
 
@@ -60,10 +70,9 @@ ssize_t sys_write(int fd, const char* buf, size_t n)
 {
   ssize_t r = -EBADF;
   file_t* f = file_get(fd);
-
   if (f)
   {
-    r = file_write(f, buf, n);
+    r = file_write_unfixed(f, buf, n,(pte_t *)currentproc->upagetable);
     file_decref(f);
   }
 
@@ -118,11 +127,13 @@ int sys_fstat(int fd, void* st)
   int r = -EBADF;
   file_t* f = file_get(fd);
 
+
   if (f)
   {
-    r = file_stat(f, st);
+    r = file_stat(f, (void *)va2pa_unfixed(st,currentproc->upagetable));
     file_decref(f);
   }
+
 
   return r;
 }
@@ -241,7 +252,17 @@ int sys_uname(void* buf)
   return 0;
 }
 
+int sys_fork() {
+  trapframe_t *tf = currentproc->tf;
+  uintptr_t stack = tf->gpr[2];
+  int ret=do_fork(0, stack, tf);
+  return ret;
+}
 
+pid_t sys_getpid()
+{
+  return currentproc->pid;
+}
 
 
 int sys_rt_sigaction(int sig, const void* act, void* oact, size_t sssz)
@@ -291,6 +312,7 @@ ssize_t sys_writev(int fd, const long* iov, int cnt)
 
 static int sys_stub_success()
 {
+  printk("in sys stub success");
   return 0;
 }
 
@@ -299,9 +321,46 @@ static int sys_stub_nosys()
   return -ENOSYS;
 }
 
+
+void  sys_get_init_memsize(){
+  //  your code here:
+  //  声明mem_size
+  //  printk
+    extern uintptr_t mem_size;
+      printk("physical mem_size = 0x%x\n",mem_size);
+}
+static int
+sys_wait(int pid_p,int * store_p) {
+    int pid = pid_p;
+    int *store = store_p;
+    int res=do_wait(pid, NULL);
+  //  printk("s0 %16lx\n",currentproc->context.ra);
+   // printk("wait syscall ret %d\n",res);
+    return res;
+}
+
+void sys_sema_down(intptr_t sema_va){
+    semaphore_t * se;
+    if((se=find_sema(sema_va))==NULL){
+      se=alloc_sema(sema_va);
+    }
+    down(se);
+}
+
+void sys_sema_up(intptr_t sema_va){
+     semaphore_t * se;
+    if((se=find_sema(sema_va))==NULL){
+      se=alloc_sema(sema_va);
+    }
+    up(se);
+}
+
 long do_syscall(long a0, long a1, long a2, long a3, long a4, long a5, unsigned long n)
 {
   const static void* syscall_table[] = {
+  //  your code here:
+  //  add get_init_memsize syscall
+    [SYS_init_memsize ] = sys_get_init_memsize,
     [SYS_exit] = sys_exit,
     [SYS_exit_group] = sys_exit,
     [SYS_read] = sys_read,
@@ -316,6 +375,9 @@ long do_syscall(long a0, long a1, long a2, long a3, long a4, long a5, unsigned l
     [SYS_getcwd] = sys_getcwd,
     [SYS_brk] = sys_brk,
     [SYS_uname] = sys_uname,
+    [SYS_fork] = sys_fork,
+    [SYS_wait] = sys_wait,
+    [SYS_getpid] = sys_getpid,
     [SYS_prlimit64] = sys_stub_nosys,
     [SYS_rt_sigaction] = sys_rt_sigaction,
     [SYS_times] = sys_times,
@@ -328,6 +390,8 @@ long do_syscall(long a0, long a1, long a2, long a3, long a4, long a5, unsigned l
     [SYS_setrlimit] = sys_stub_nosys,
     [SYS_set_tid_address] = sys_stub_nosys,
     [SYS_set_robust_list] = sys_stub_nosys,
+    [SYS_sema_down] = sys_sema_down,
+    [SYS_sema_up] = sys_sema_up,
   };
 
   syscall_t f = 0;

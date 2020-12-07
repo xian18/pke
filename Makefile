@@ -26,13 +26,12 @@
 % : SCCS/s.%
 
 # Default is to build the prereqs of the all target (defined at bottom)
-default : all app_elf 
+default : all  app_elf objdump
 .PHONY : default
 
 project_name := pke
 src_dir      := .
 obj_dir      := obj
-
 # scripts_dir  := $(src_dir)/scripts
 
 # If the version information is not in the configure script, then we
@@ -121,10 +120,9 @@ cscope:
 mkdir_obj :
 	@test -d $(obj_dir) || mkdir $(obj_dir)
 
-
 app_elf_str := $(notdir $(basename $(wildcard app/*.c)))
-pk_objs := file.o syscall.o handlers.o frontend.o elf.o console.o mmap.o
-pk_asm_objs := entry.o
+pk_objs := file.o syscall.o handlers.o frontend.o elf.o console.o mmap.o pmm.o proc.o sched.o  intr.o lock.o semap.o wait_q.o
+pk_asm_objs := entry.o procEntry.o switch.o
 obj_pk_objs := $(addprefix $(obj_dir)/, $(pk_objs))
 obj_pk_asm_objs := $(addprefix $(obj_dir)/, $(pk_asm_objs))
 
@@ -179,11 +177,14 @@ $(obj_dir)/pk.o : pk.c
 
 clean :
 	rm -rf $(obj_dir)
-#app
+
+
 app_elf:
 	@mkdir -p app/elf
-	@for target in $(app_elf_str); \
+	for target in $(app_elf_str); \
 	do                        \
 	$(COMPILE)  -o app/elf/$$target app/$$target.c; \
 	done
 
+objdump:
+	riscv64-unknown-elf-objdump -D obj/pke > pke_dump

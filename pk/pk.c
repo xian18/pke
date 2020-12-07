@@ -1,5 +1,7 @@
 // See LICENSE for license details.
-
+#include "pmm.h"
+#include "proc.h"
+#include "sched.h"
 #include "pk.h"
 #include "mmap.h"
 #include "boot.h"
@@ -7,7 +9,7 @@
 #include "mtrap.h"
 #include "frontend.h"
 #include <stdbool.h>
-
+#include "semap.h"
 elf_info current;
 long disabled_hart_mask;
 
@@ -62,47 +64,6 @@ static void run_loaded_program(size_t argc, char** argv, uintptr_t kstack_top)
 {
   // copy phdrs to user stack
   size_t stack_top = current.stack_top - current.phdr_size;
-  memcpy((void*)stack_top, (void*)current.phdr, current.phdr_size);
-  current.phdr = stack_top;
-
-  // copy argv to user stack
-  for (size_t i = 0; i < argc; i++) {
-    size_t len = strlen((char*)(uintptr_t)argv[i])+1;
-    stack_top -= len;
-    memcpy((void*)stack_top, (void*)(uintptr_t)argv[i], len);
-    argv[i] = (void*)stack_top;
-  }
-
-  // copy envp to user stack
-  const char* envp[] = {
-    // environment goes here
-  };
-  size_t envc = sizeof(envp) / sizeof(envp[0]);
-  for (size_t i = 0; i < envc; i++) {
-    size_t len = strlen(envp[i]) + 1;
-    stack_top -= len;
-    memcpy((void*)stack_top, envp[i], len);
-    envp[i] = (void*)stack_top;
-  }
-
-  // align stack
-  stack_top &= -sizeof(void*);
-
-  struct {
-    long key;
-    long value;
-  } aux[] = {
-    {AT_ENTRY, current.entry},
-    {AT_PHNUM, current.phnum},
-    {AT_PHENT, current.phent},
-    {AT_PHDR, current.phdr},
-    {AT_PAGESZ, RISCV_PGSIZE},
-    {AT_SECURE, 0},
-    {AT_RANDOM, stack_top},
-    {AT_NULL, 0}
-  };
-
-  // place argc, argv, envp, auxp on stack
   #define PUSH_ARG(type, value) do { \
     *((type*)sp) = (type)value; \
     sp += sizeof(type); \
@@ -126,23 +87,17 @@ static void run_loaded_program(size_t argc, char** argv, uintptr_t kstack_top)
     } \
   } while (0)
 
-  STACK_INIT(uintptr_t);
 
-  if (current.cycle0) { // start timer if so requested
-    current.time0 = rdtime();
-    current.cycle0 = rdcycle();
-    current.instret0 = rdinstret();
-  }
 
   trapframe_t tf;
   init_tf(&tf, current.entry, stack_top);
   __clear_cache(0, 0);
+  do_fork(0,stack_top,&tf);
   write_csr(sscratch, kstack_top);
-  start_user(&tf);
 }
 
 static void rest_of_boot_loader(uintptr_t kstack_top)
-{
+{ 	
   arg_buf args;
   size_t argc = parse_args(&args);
   if (!argc)
@@ -152,9 +107,16 @@ static void rest_of_boot_loader(uintptr_t kstack_top)
   long phdrs[128];
   current.phdr = (uintptr_t)phdrs;
   current.phdr_size = sizeof(phdrs);
-  load_elf(args.argv[0], &current);
-
+  printk("elf name %s \n",args.argv[0]);
+  memset(current.file_name,0,sizeof(current.file_name));
+  memcpy(current.file_name,args.argv[0],sizeof(current.file_name));
+  sched_init();
+  clock_init();
+  proc_init();
+  load_elf_user(args.argv[0], &current,(pte_t *)currentproc->upagetable);
+  init_semaq();
   run_loaded_program(argc, args.argv, kstack_top);
+  cpu_idle();
 }
 
 void boot_loader(uintptr_t dtb)

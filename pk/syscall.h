@@ -3,6 +3,9 @@
 #ifndef _PK_SYSCALL_H
 #define _PK_SYSCALL_H
 
+#define SYS_init_memsize 81
+#define SYS_sema_down 82
+#define SYS_sema_up 83
 #define SYS_exit 93
 #define SYS_exit_group 94
 #define SYS_getpid 172
@@ -25,6 +28,8 @@
 #define SYS_pread 67
 #define SYS_pwrite 68
 #define SYS_uname 160
+#define SYS_fork 170
+#define SYS_wait  3
 #define SYS_getuid 174
 #define SYS_geteuid 175
 #define SYS_getgid 176

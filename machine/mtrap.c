@@ -88,6 +88,7 @@ static uintptr_t mcall_shutdown()
 
 static uintptr_t mcall_set_timer(uint64_t when)
 {
+ // printm("++ mcall_set_timer ++ \n");
   *HLS()->timecmp = when;
   clear_csr(mip, MIP_STIP);
   set_csr(mie, MIP_MTIP);
@@ -129,7 +130,7 @@ void mcall_trap(uintptr_t* regs, uintptr_t mcause, uintptr_t mepc)
   write_csr(mepc, mepc + 4);
 
   uintptr_t n = regs[17], arg0 = regs[10], arg1 = regs[11], retval, ipi_type;
-
+//  printm("mcall trap num : %d\n",n);
   switch (n)
   {
     case SBI_CONSOLE_PUTCHAR:
