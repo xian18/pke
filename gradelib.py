@@ -1,8 +1,8 @@
 from __future__ import print_function
 import sys, os, re, traceback
 
-dir = '/data/workspace/myshixun/src/step1/'
-#dir='./'
+#dir = '/data/workspace/myshixun/src/step1/'
+dir='./'
 TOTAL = POSSIBLE = 0
 
 def test_app(app):
@@ -57,11 +57,6 @@ class Runner():
             print(color('red', 'build pk error!'))
             sys.exit(1)
     def run_app(self, app, mem = '2048'):
-        cmd = 'riscv64-unknown-elf-gcc -o '+dir+'app/elf/' + app +' '+dir+'app/'+ app + '.c'
-        ret = os.system(cmd)
-        if ret != 0:
-            print(color('red', 'running app error!'))
-            sys.exit(1)
         cmd = 'spike -m'+mem +' '+dir+'obj/pke '+dir+'app/elf/' + app+' > pke_out.txt'
         os.system(cmd)
         self.get_pke_out()
