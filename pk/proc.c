@@ -69,7 +69,7 @@ alloc_proc(void) {
      *       struct mm_struct *mm;                       // Process's memory management field
      *       struct context context;                     // Switch here to run process
      *       struct trapframe *tf;                       // Trap frame for current interrupt
-     *       uintptr_t pagetable;                              // CR3 register: the base addr of Page Directroy Table(PDT)
+     *       uintptr_t pagetable;                              // satp register: the base addr of Page Directroy Table(PDT)
      *       uint32_t flags;                             // Process flag
      *       char name[PROC_NAME_LEN + 1];               // Process name
      * 
