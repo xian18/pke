@@ -69,7 +69,7 @@ alloc_proc(void) {
      *       struct mm_struct *mm;                       // Process's memory management field
      *       struct context context;                     // Switch here to run process
      *       struct trapframe *tf;                       // Trap frame for current interrupt
-     *       uintptr_t cr3;                              // CR3 register: the base addr of Page Directroy Table(PDT)
+     *       uintptr_t pagetable;                              // CR3 register: the base addr of Page Directroy Table(PDT)
      *       uint32_t flags;                             // Process flag
      *       char name[PROC_NAME_LEN + 1];               // Process name
      * 
@@ -138,7 +138,7 @@ proc_run(struct proc_struct *proc) {
         bool intr_flag;
         struct proc_struct *prev = currentproc, *next = proc;
         currentproc = proc;
-        write_csr(sptbr, ((uintptr_t)next->cr3 >> RISCV_PGSHIFT) | SATP_MODE_CHOICE);
+        write_csr(sptbr, ((uintptr_t)next->pagetable >> RISCV_PGSHIFT) | SATP_MODE_CHOICE);
         switch_to(&(prev->context), &(next->context));
         
     }
@@ -219,9 +219,9 @@ static int
 copy_mm(uint32_t clone_flags, struct proc_struct *proc) {
     //assert(currentproc->mm == NULL);
     /* do nothing in this project */
-    uintptr_t cr3=(uintptr_t)__page_alloc();
-     memcpy((void *)cr3,(void *)proc->cr3,RISCV_PGSIZE);
-     proc->cr3=cr3;
+    uintptr_t pagetable=(uintptr_t)__page_alloc();
+     memcpy((void *)pagetable,(void *)proc->pagetable,RISCV_PGSIZE);
+     proc->pagetable=pagetable;
     return 0;
 }
 
