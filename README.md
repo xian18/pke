@@ -1,5 +1,6 @@
 已完成该项目的所有实验<br/>
 
+实验要求： [pke-doc](https://gitee.com/syivester/pke-doc/tree/master)
 
 **(RISC-V) Proxy Kernel for Education**
 
